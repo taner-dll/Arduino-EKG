@@ -1,4 +1,3 @@
-import 'package:arduino_ekg/screens/device_detail.dart';
 import 'package:arduino_ekg/screens/device_detail_.dart';
 import 'package:arduino_ekg/screens/discovery_page.dart';
 import 'package:arduino_ekg/screens/user_info.dart';
