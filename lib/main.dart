@@ -1,9 +1,10 @@
 import 'package:arduino_ekg/screens/device_detail_.dart';
 import 'package:arduino_ekg/screens/discovery_page.dart';
 import 'package:arduino_ekg/screens/user_info.dart';
+import 'package:arduino_ekg/screens/bluetooth_pack_test.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => const UserInfo()),
+        GetPage(name: '/', page: () => const BluetoothPackTest()),
         GetPage(
             name: '/device-detail',
             page: () => const DeviceDetailBkp(),
