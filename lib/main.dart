@@ -19,7 +19,7 @@ Future<void> main() async {
 
 }
 
-FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+//FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

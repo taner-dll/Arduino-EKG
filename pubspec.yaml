@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.5
   flutter_blue_plus: ^1.4.0 # Use for BLE
   flutter_bluetooth_serial: ^0.4.0 # Use for classical Bluetooth
+  bluetooth_classic: ^0.0.1
   get: ^4.6.5
   bluetooth_enable_fork: ^0.1.6
   oscilloscope: ^0.2.0+1
