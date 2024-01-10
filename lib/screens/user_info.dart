@@ -107,19 +107,22 @@ class _UserInfoState extends State<UserInfo> {
                 controller: _nameController,
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen adınızı giriniz';
+                    _nameController.text = 'Taner';
+                    //return 'Lütfen adınızı giriniz';
                   }
                   return null;
                 },
                 decoration: const InputDecoration(
                   labelText: 'Adınız:',
                 ),
+
               ),
               TextFormField(
                 controller: _surnameController,
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen soyadınızı giriniz';
+                    _surnameController.text = 'Dll';
+                    //return 'Lütfen soyadınızı giriniz';
                   }
                   return null;
                 },
@@ -132,7 +135,8 @@ class _UserInfoState extends State<UserInfo> {
                 readOnly: true,
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen doğum tarihinizi giriniz';
+                    _birthdayController.text = '15-03-1988';
+                    //return 'Lütfen doğum tarihinizi giriniz';
                   }
                   return null;
                 },
@@ -172,7 +176,8 @@ class _UserInfoState extends State<UserInfo> {
                 inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen boyunuzu cm cinsinden giriniz';
+                    _heightController.text = '177';
+                    //return 'Lütfen boyunuzu cm cinsinden giriniz';
                   }
                   // You can add more complex email validation logic here
                   return null;
@@ -188,7 +193,8 @@ class _UserInfoState extends State<UserInfo> {
                 inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen ağırlığınızı kilogram cinsinden giriniz';
+                    _weightController.text = '92';
+                    //return 'Lütfen ağırlığınızı kilogram cinsinden giriniz';
                   }
                   // You can add more complex email validation logic here
                   return null;
@@ -257,7 +263,8 @@ class _UserInfoState extends State<UserInfo> {
                 inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen LDL bilgisi giriniz';
+                    _totalLDL.text = '110';
+                    //return 'Lütfen LDL bilgisi giriniz';
                   }
                   return null;
                 },
@@ -272,7 +279,8 @@ class _UserInfoState extends State<UserInfo> {
                 inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Lütfen HDL bilgisi giriniz';
+                    _hdl.text = '45';
+                    //return 'Lütfen HDL bilgisi giriniz';
                   }
                   return null;
                 },

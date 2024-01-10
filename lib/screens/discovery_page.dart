@@ -1,208 +1,76 @@
 import 'dart:async';
 
-import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:get/get.dart';
-import 'discovery_page_device_list.dart';
+
+import 'package:bluetooth_classic/models/device.dart';
+import 'package:flutter/services.dart';
+import 'package:bluetooth_classic/bluetooth_classic.dart';
 
 class DiscoveryPage extends StatefulWidget {
 
-  // If autostart is true, the device scanning will start automatically.
-  final bool autostart;
-  const DiscoveryPage({super.key, this.autostart = true});
+
+  const DiscoveryPage({super.key});
 
   @override
   State<DiscoveryPage> createState() => _DiscoveryPage();
 }
 
-
-
-
 class _DiscoveryPage extends State<DiscoveryPage> {
+  String _platformVersion = 'Unknown';
+  final _bluetoothClassicPlugin = BluetoothClassic();
+  List<Device> _devices = [];
+  List<Device> _discoveredDevices = [];
+  bool _scanning = false;
+  Uint8List _data = Uint8List(0);
+  final int _deviceStatus = Device.disconnected;
 
-
-  /// Değişkenler (Cihaz Arama Ekranı)
-  StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
-
-  List<BluetoothDiscoveryResult> results =
-      List<BluetoothDiscoveryResult>.empty(growable: true);
-
-  bool isDiscovering = false;
-  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-
-  bool isConnected = false;
-  BluetoothConnection? conn;
-
-
-
-
-  _DiscoveryPage();
-
-
-
-
-
-  /// State initial parametreleri
   @override
   void initState() {
     super.initState();
-
-
-
-
-    // BT bağlantı durumunu al
-    FlutterBluetoothSerial.instance.state.then((state) {
+    initPlatformState();
+    _bluetoothClassicPlugin.onDeviceStatusChanged().listen((event) {
       setState(() {
-        _bluetoothState = state;
       });
     });
-
-
-
-
-
-    // BT bağlantı değişikliklerini state'e aktar
-    FlutterBluetoothSerial.instance
-        .onStateChanged()
-        .listen((BluetoothState state) {
+    _bluetoothClassicPlugin.onDeviceDataReceived().listen((event) {
       setState(() {
-        _bluetoothState = state;
-      });
-    });
-
-
-
-
-    BluetoothEnable.enableBluetooth.then((result) {
-      if (result == "false") {
-        customEnableBT(context);
-      } else if (result == "true") {
-        isDiscovering = widget.autostart;
-        if (isDiscovering) {
-          _startDiscovery();
-        }
-      }
-    });
-
-
-
-    if (kDebugMode) {
-      print(FlutterBluetoothSerial.instance.address);
-    }
-
-
-  }
-
-
-
-
-  /// BT cihaz aramayı yeniden başlatan fonksiyon
-  /// _startDiscovery() fonksiyonunu da tetikler
-  void _restartDiscovery() {
-    results.clear();
-
-    BluetoothEnable.enableBluetooth.then((result) {
-      if (result == "false") {
-        customEnableBT(context);
-      } else if (result == "true") {
-        setState(() {
-          isDiscovering = true;
-        });
-
-        _startDiscovery();
-      }
-    });
-  }
-
-
-
-
-  void _startDiscovery() {
-    _streamSubscription =
-        FlutterBluetoothSerial.instance.startDiscovery().listen((r) {
-      setState(() {
-        final existingIndex = results.indexWhere(
-            (element) => element.device.address == r.device.address);
-        if (existingIndex >= 0) {
-          results[existingIndex] = r;
-        } else {
-          results.add(r);
-        }
-      });
-    });
-
-    _streamSubscription!.onDone(() {
-      setState(() {
-        isDiscovering = false;
+        _data = Uint8List.fromList([..._data, ...event]);
       });
     });
   }
-
-
-  /// Bellek sızıntılarını önlemek için dispose işlemi
-  @override
-  void dispose() {
-    // Avoid memory leak (`setState` after dispose) and cancel discovery
-    _streamSubscription?.cancel();
-    super.dispose();
-  }
-
-
 
   /// Page Scaffold
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       appBar: AppBar(
-        title: isDiscovering
-            ? const Text('Cihaz Aranıyor...')
-            : const Text('EKG Cihazı Ara'),
-        actions: <Widget>[
-          isDiscovering
-              ? FittedBox(
-                  child: Container(
-                    margin: const EdgeInsets.all(16.0),
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.replay),
-                  onPressed: _restartDiscovery,
-                )
-        ],
+        title: _scanning ? const Text('Cihaz Aranıyor...') : const Text('EKG Cihazı Ara'),
       ),
-
-
       body: Column(
         children: [
           const SizedBox(height: 20),
-
-          SwitchListTile(
-              title: const Text('Bluetooth Aç/Kapat'),
-              value: _bluetoothState.isEnabled,
-              onChanged: (bool value) {
-                // Do the request and update with the true value then
-                future() async {
-                  if (value) {
-                    await FlutterBluetoothSerial.instance.requestEnable();
-                  } else {
-                    await FlutterBluetoothSerial.instance.requestDisable();
-                    setState(() {
-                      isDiscovering = false;
-                    });
-                  }
-                }
-                future().then((_) {
-                  setState(() {});
-                });
-              }),
-
+          const Icon(Icons.bluetooth_searching_rounded, size: 128, color: Colors.blueGrey),
+          const SizedBox(height: 20),
+          //Text("Device status is $_deviceStatus"),
+          TextButton(
+            onPressed: () async {
+              await _bluetoothClassicPlugin.initPermissions();
+            },
+            child: const Text("İzinleri Kontrol et"),
+          ),
+          TextButton(
+            onPressed: _deviceStatus == Device.connected
+                ? () async {
+              await _bluetoothClassicPlugin.disconnect();
+            }
+                : null,
+            child: const Text("disconnect"),
+          ),
+          TextButton(
+            onPressed: _getDevices,
+            child: const Text("Bluetooth Cihazlarını Göster (Paired)"),
+          ),
 
           /*Image.asset(
             'assets/images/heart-rate-monitor.png',
@@ -210,83 +78,87 @@ class _DiscoveryPage extends State<DiscoveryPage> {
             width: 128,
           ),*/
 
-          const Icon(Icons.bluetooth_searching_rounded, size: 128, color: Colors.blueGrey),
-
-
-          const SizedBox(height: 20),
-
-
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: results.length,
-            itemBuilder: (BuildContext context, index) {
-              BluetoothDiscoveryResult result = results[index];
-              final device = result.device;
-              //final address = device.address;
-              return Card(
-                child: DiscoveryPageDeviceList(
-                  device: device,
-                  rssi: result.rssi,
-                  onTap: () {
-                    var deviceName_ = device.name;
-                    var deviceAddress_ = device.address;
-                    //FlutterBluetoothSerial.instance.openSettings();
+          Center(
+            child: Text('Running on: $_platformVersion\n'),
+          ),
+          ...[
+            for (var device in _devices)
+              TextButton(
+                  onPressed: () async {
+                    await _bluetoothClassicPlugin.connect(device.address, "00001101-0000-1000-8000-00805f9b34fb");
+                    setState(() {
+                      _discoveredDevices = [];
+                      _devices = [];
+                    });
                     Get.toNamed('/device-detail', arguments: {
-                      'deviceName': deviceName_,
-                      'deviceAddress': deviceAddress_
+                      'deviceName': device.name,
+                      'deviceAddress': device.address
                     });
                   },
+                  child: Text(device.name ?? device.address))
+          ],
 
-                ),
-              );
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _scanning = true;
+              });
+              _scan();
             },
+            child: Text(_scanning ? "Taramayı Durdur" : "Yeni Tarama Başlat"),
           ),
-
-
-
-
+          ...[for (var device in _discoveredDevices) Text(device.name ?? device.address)],
         ],
       ),
     );
   }
 
-
-
-  /// Bluetooth cihazlarını kapatmak için bir fonksiyon
-  void kapatBluetoothCihazlarini() async {
-    // Bluetooth cihazlarını ara ve listele
-    List<BluetoothDevice> cihazlar =
-        await FlutterBluetoothSerial.instance.getBondedDevices();
-
-    // Tüm cihazları kapat
-    for (BluetoothDevice cihaz in cihazlar) {
-      await FlutterBluetoothSerial.instance
-          .removeDeviceBondWithAddress(cihaz.address); // Cihazı
-      // eşleştirme listesinden kaldır
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    // We also handle the message potentially returning null.
+    try {
+      platformVersion = await _bluetoothClassicPlugin.getPlatformVersion() ?? 'Unknown platform version';
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
     }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+    });
   }
 
-
-  Future<void> customEnableBT(BuildContext context) async {
-    String dialogTitle = "Hey! Please give me permission to use Bluetooth!";
-    bool displayDialogContent = true;
-    String dialogContent = "This app requires Bluetooth to connect to device.";
-    String cancelBtnText = "Nope";
-    String acceptBtnText = "Sure";
-    double dialogRadius = 10.0;
-    bool barrierDismissible = true; //
-
-    BluetoothEnable.customBluetoothRequest(
-            context,
-            dialogTitle,
-            displayDialogContent,
-            dialogContent,
-            cancelBtnText,
-            acceptBtnText,
-            dialogRadius,
-            barrierDismissible)
-        .then((value) {
-      //print(value);
+  Future<void> _getDevices() async {
+    var res = await _bluetoothClassicPlugin.getPairedDevices();
+    setState(() {
+      _devices = res;
     });
+  }
+
+  Future<void> _scan() async {
+    if (_scanning) {
+      await _bluetoothClassicPlugin.stopScan();
+      setState(() {
+        _scanning = false;
+      });
+    } else {
+      await _bluetoothClassicPlugin.startScan();
+      _bluetoothClassicPlugin.onDeviceDiscovered().listen(
+        (event) {
+          setState(() {
+            _discoveredDevices = [..._discoveredDevices, event];
+          });
+        },
+      );
+      setState(() {
+        _scanning = true;
+      });
+    }
   }
 }

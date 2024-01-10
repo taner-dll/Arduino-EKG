@@ -1,7 +1,6 @@
 import 'package:arduino_ekg/screens/device_detail_.dart';
 import 'package:arduino_ekg/screens/discovery_page.dart';
 import 'package:arduino_ekg/screens/user_info.dart';
-import 'package:arduino_ekg/screens/bluetooth_pack_test.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -30,13 +29,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey
-        ,
-      ),
+      theme: ThemeData.light(useMaterial3: true),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => const BluetoothPackTest()),
+        GetPage(name: '/', page: () => const UserInfo()),
         GetPage(
             name: '/device-detail',
             page: () => const DeviceDetailBkp(),
